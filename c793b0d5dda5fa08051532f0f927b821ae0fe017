@@ -1,0 +1,8 @@
+Code-Review+2: Dean Troyer <dtroyer@gmail.com>
+Workflow+1: Dean Troyer <dtroyer@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 21 Aug 2018 00:16:44 +0000
+Reviewed-on: https://review.openstack.org/593978
+Project: openstack/stx-tis-repo
+Branch: refs/heads/master
