@@ -1,3 +1,107 @@
 - project:
-    templates:
-      - noop-jobs
+    check:
+      jobs:
+        - openstack-tox-linters
+        - stx-devstack-test1:
+            voting: false
+    gate:
+      jobs:
+        - openstack-tox-linters
+        - stx-devstack-test1:
+            voting: false
+
+# This job is to begin testing a DevStack run here
+- job:
+    name: stx-minimal-devstack-base
+    nodeset: openstack-single-node-bionic
+    parent: devstack
+    description: |
+      Common job template for StarlingX DevStack tests with most OpenStack
+      services disabled
+    roles:
+      - zuul: openstack-infra/devstack
+    timeout: 9000
+    required-projects:
+      - name: git.openstack.org/openstack-dev/devstack
+      - name: git.openstack.org/openstack/keystone
+      - name: git.openstack.org/openstack/requirements
+    vars:
+      devstack_services:
+        # Turn off most OpenStack services
+        # Ceilometer services
+        ceilometer-acentral: false
+        ceilometer-acompute: false
+        ceilometer-alarm-evaluator: false
+        ceilometer-alarm-notifier: false
+        ceilometer-anotification: false
+        ceilometer-api: false
+        ceilometer-collector: false
+        # Cinder services
+        c-api: false
+        c-bak: false
+        c-sch: false
+        c-vol: false
+        cinder: false
+        # Glance services
+        g-api: false
+        g-reg: false
+        # Horizon services
+        horizon: false
+        # Neutron services
+        q-agt: true
+        q-dhcp: false
+        q-l3: false
+        q-meta: false
+        q-metering: false
+        q-svc: false
+        # Nova services
+        n-api: false
+        n-api-meta: false
+        n-cauth: false
+        n-cond: false
+        n-cpu: false
+        n-novnc: false
+        n-obj: false
+        n-sch: false
+        placement-api: false
+        # Swift services
+        s-account: false
+        s-container: false
+        s-object: false
+        s-proxy: false
+        tempest: false
+        # Database
+        mysql: false
+        postgresql: true
+      devstack_localrc:
+        LIBS_FROM_GIT: keystone
+        FORCE: yes
+
+- job:
+    name: stx-devstack-test1
+    parent: stx-minimal-devstack-base
+    description: |
+      Sanity check on DevStack plugin configuration - enable plugins
+      but only a few services
+    timeout: 7800
+    required-projects:
+      - name: openstack/stx-config
+      - name: openstack/stx-fault
+      - name: openstack/stx-integ
+      - name: openstack/stx-update
+    vars:
+      tox_envlist: functional
+      devstack_services:
+        stx-config: true
+        cgtsclient: true
+        stx-fault: true
+        fm-common: true
+        fm-api: true
+        fm-rest-api: true
+        # fm-mgr: true
+      devstack_plugins:
+        stx-tis-repo: git://git.starlingx.io/stx-tis-repo
+        stx-integ: git://git.starlingx.io/stx-integ
+        stx-update: git://git.starlingx.io/stx-update
+      devstack_localrc:
+        LIBS_FROM_GIT: keystone
