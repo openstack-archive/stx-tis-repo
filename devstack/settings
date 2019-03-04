@@ -1,0 +1,35 @@
+#!/bin/bash
+# Devstack settings
+
+# This must not use any variables to work properly in OpenStack's DevStack playbook
+define_plugin stx-tis-repo
+# This works for Zuul jobs using OpenStack's DevStack roles
+plugin_requires stx-tis-repo stx-update
+plugin_requires stx-tis-repo stx-integ
+
+STX_TIS_NAME=stx-tis-repo
+enable_service $STX_TIS_NAME
+
+# Settings for stx-fault ----------
+
+STX_FAULT_NAME=stx-fault
+enable_service $
+# emulate enable_plugin, can't call it because we don't actually want it enabled
+GITREPO[$STX_FAULT_NAME]=$GIT_BASE/openstack/$STX_FAULT_DIR
+GITDIR[$STX_FAULT_NAME]=$DEST/$STX_FAULT_DIR
+GITBRANCH[$STX_FAULT_NAME]=master
+
+# Circular dependencies are fun!
+# fm-rest-api has an undeclared dependency on cgtsclient from stx-config
+# so if that is not present we can't install it
+if ! is_service_enabled stx-config; then
+    disable_service fm-rest-api
+fi
+# but fm-rest-api has its own (declared!) external dependencies too
+if is_service_enabled fm-rest-api; then
+    # stx-update
+    enable_service tsconfig
+fi
+
+# Initial source of lib script
+source $DEST/stx-tis-repo/devstack/lib/stx-fault
