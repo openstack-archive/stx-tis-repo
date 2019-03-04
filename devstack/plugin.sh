@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# devstack/plugin.sh
+# Triggers specific functions to install and configure stx-integ
+
+echo_summary "$STX_TIS_NAME devstack plugin.sh called: $1/$2"
+
+
+# check for service enabled
+if is_service_enabled $STX_TIS_NAME; then
+    if [[ "$1" == "stack" && "$2" == "install" ]]; then
+        # Perform installation of source
+        echo_summary "Install $STX_TIS_NAME"
+        install_fault
+
+    elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
+        # Configure after the other layer 1 and 2 services have been configured
+        echo_summary "Configure $STX_TIS_NAME"
+        configure_fault
+        create_fault_user_group
+        create_fault_accounts
+
+    elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
+        # Initialize and start the service
+        echo_summary "Initialize and start $STX_TIS_NAME"
+        init_fault
+        start_fault
+
+    elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
+        # do sanity test
+        echo_summary "test-config $STX_TIS_NAME"
+    fi
+
+    if [[ "$1" == "unstack" ]]; then
+        # Shut down services
+        echo_summary "Stop $STX_TIS_NAME"
+        stop_fault
+    fi
+
+    if [[ "$1" == "clean" ]]; then
+        echo_summary "Clean $STX_TIS_NAME"
+        cleanup_fault
+    fi
+fi
