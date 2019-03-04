@@ -1,0 +1,98 @@
+#!/bin/bash
+# Devstack settings
+
+# This must not use any variables to work properly in OpenStack's DevStack playbook
+define_plugin stx-tis-repo
+
+STX_TIS_NAME=stx-tis-repo
+enable_service $STX_TIS_NAME
+
+# Settings for stx-config ----------
+
+STX_CONFIG_NAME=stx-config
+
+######### Plugin Specific ##########
+#enable_service $STX_CONFIG_NAME
+
+GITREPO[$STX_CONFIG_NAME]=$GIT_BASE/openstack/$STX_CONFIG_NAME
+GITDIR[$STX_CONFIG_NAME]=$DEST/$STX_CONFIG_NAME
+GITBRANCH[$STX_CONFIG_NAME]=master
+
+# stx-integ
+enable_service platform-util
+# stx-update
+enable_service sw-patch tsconfig
+
+# Settings for stx-fault ----------
+
+STX_FAULT_NAME=stx-fault
+#enable_service $STX_FAULT_NAME
+
+# emulate enable_plugin, can't call it because we don't actually want it enabled
+GITREPO[$STX_FAULT_NAME]=$GIT_BASE/openstack/$STX_FAULT_NAME
+GITDIR[$STX_FAULT_NAME]=$DEST/$STX_FAULT_NAME
+GITBRANCH[$STX_FAULT_NAME]=master
+
+# Circular dependencies are fun!
+# fm-rest-api has an undeclared dependency on cgtsclient from stx-config
+# so if that is not present we can't install it
+if ! is_service_enabled stx-config; then
+    disable_service fm-rest-api
+fi
+# but fm-rest-api has its own (declared!) external dependencies too
+if is_service_enabled fm-rest-api; then
+    # stx-update
+    enable_service tsconfig
+fi
+
+# Settings for stx-metal ----------
+
+STX_METAL_NAME=stx-metal
+#enable_service $STX_METAL_NAME
+
+# emulate enable_plugin, can't call it because we don't actually want it enabled
+GITREPO[$STX_METAL_NAME]=$GIT_BASE/openstack/$STX_METAL_NAME
+GITDIR[$STX_METAL_NAME]=$DEST/$STX_METAL_NAME
+GITBRANCH[$STX_METAL_NAME]=master
+
+if is_service_enabled mtce-components; then
+    enable_service fsmon hbs hwmon mtce mtcalarm mtclog pmon rmon
+fi
+
+# Be careful to enable hostw, it will restart your host
+# if some config is not correct
+#enable_service hostw
+
+if is_service_enabled mtce-compute; then
+    # stx-update
+    enable_service tsconfig
+fi
+# run_process checks whether the service name is enabled or not
+if is_service_enabled hbs; then
+    # enable hbsAgent/hbsClient service as part of hbs service
+    enable_service hbsAgent
+    enable_service hbsClient
+fi
+if is_service_enabled mtce; then
+    # enable mtcAgent/mtcClient service as part of mtce service
+    enable_service mtcAgent
+    enable_service mtcClient
+fi
+if is_service_enabled hwmon && is_plugin_enabled stx-config; then
+    enable_service sysinv
+fi
+
+
+# Initial source of lib script
+
+if is_service_enabled stx-config; then
+    source $DEST/stx-tis-repo/devstack/lib/stx-config
+fi
+
+if is_service_enabled stx-fault; then
+    source $DEST/stx-tis-repo/devstack/lib/stx-fault
+fi
+
+if is_service_enabled stx-metal; then
+    source $DEST/stx-tis-repo/devstack/lib/stx-metal
+fi
