@@ -23,6 +23,19 @@ enable_service platform-util
 # stx-update
 enable_service sw-patch tsconfig
 
+if is_service_enabled sysinv-agent; then
+    enable_service sysinv
+fi
+
+if is_service_enabled sysinv-agent; then
+    local req_services="key rabbit nova neutron"
+    for srv in $req_services;do
+        if ! is_service_enabled "$srv"; then
+            die $LINENO "$srv should be enabled for SysInv"
+        fi
+    done
+fi
+
 # Settings for stx-fault ----------
 
 STX_FAULT_NAME=stx-fault

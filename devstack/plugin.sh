@@ -13,9 +13,7 @@ if is_service_enabled $STX_TIS_NAME; then
         echo_summary "Install $STX_TIS_NAME"
 
         if is_service_enabled $STX_CONFIG_NAME; then
-            install_cgtsclient
-            install_sysinv_depends
-            install_sysinv
+            install_config
         fi
 
         if is_service_enabled $STX_FAULT_NAME; then
@@ -31,9 +29,7 @@ if is_service_enabled $STX_TIS_NAME; then
         echo_summary "Configure $STX_TIS_NAME"
 
         if is_service_enabled $STX_CONFIG_NAME; then
-            configure_sysinv
-            create_sysinv_user_group
-            create_sysinv_accounts
+            configure_config
         fi
 
         if is_service_enabled $STX_FAULT_NAME; then
