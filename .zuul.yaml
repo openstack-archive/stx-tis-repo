@@ -97,7 +97,7 @@
         stx-fault: true
         fm-common: true
         fm-api: true
-        # fm-rest-api: true
+        fm-rest-api: true
         # fm-mgr: true
       devstack_plugins:
         stx-tis-repo: git://git.starlingx.io/stx-tis-repo
